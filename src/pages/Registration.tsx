@@ -1,5 +1,5 @@
 import { useState, type SyntheticEvent } from "react";
-import registrationService from "../services/registrationService";
+import registrationService from "../services/authService";
 
 const Registation = () => {
 

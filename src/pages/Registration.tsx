@@ -13,10 +13,14 @@ const Registation = () => {
 
     try {
       await registrationService.registerUser({ name, email, password });
+      setEmail('');
+      setName('');
+      setPassword('')
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Something went wrong',
       );
+      setTimeout(() => setError(''), 5000)
     }
   }
 

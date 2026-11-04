@@ -1,61 +1,40 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import type {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from '../types/api';
+import {
+  clearAccessToken,
+  getAccessToken,
+  saveAccessToken,
+} from './accessTokenStorage';
+import api from './httpClient';
 
-const registerUser = async(data: {
-  name:string;
-  email:string;
-  password:string;
-}) => {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+const registerUser = async (
+  data: RegisterRequest,
+): Promise<RegisterResponse> => {
+  const response = await api.post<RegisterResponse>('/auth/register', data);
+  return response.data;
+};
 
-  if (!response.ok) {
-    const error = await response.json();
+const login = async (data: LoginRequest): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>('/auth/login', data);
+  const tokens = response.data;
 
-    const message = Array.isArray(error.message)
-    ? error.message.join(', ')
-    : error.message;
-
-    throw new Error(message || 'Error while register account');
+  if (!tokens.accessToken || !tokens.refreshToken) {
+    throw new Error(
+      'The server returned an incomplete authentication response.',
+    );
   }
 
-
-  return response.json() as Promise<{
-    id: string;
-    name: string;
-    email: string;
-  }>;
-}
-
-const login = async(data: {
-  email: string;
-  password: string;
-}) => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',},
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-
-    const message = Array.isArray(error.message)
-    ? error.message.join(', ')
-    : error.message;
-
-    throw new Error(message || 'Error while register account');
-  }
-
-  const { accessToken } = await response.json();
-  sessionStorage.setItem('accessToken', accessToken);
-  
-}
+  saveAccessToken(tokens.accessToken);
+  return tokens;
+};
 
 export default {
-  registerUser,
+  getAccessToken,
   login,
+  logout: clearAccessToken,
+  registerUser,
 };

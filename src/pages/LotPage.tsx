@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LotCard } from '../components/LotCard';
+import type { BidHistoryResponse } from '../schemas/bids/bid-history.schema';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
+import { getAccessToken } from '../services/accessTokenStorage';
+import bidsService from '../services/bidsService';
 import lotsService from '../services/lotsService';
 
 export const LotPage = () => {
@@ -11,6 +14,13 @@ export const LotPage = () => {
     lot: LotDetails | null;
     error: string | null;
   } | null>(null);
+  const [bidHistory, setBidHistory] = useState<{
+    id: string;
+    result: BidHistoryResponse | null;
+    error: string | null;
+    isLoading: boolean;
+    requiresSignIn: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -18,6 +28,7 @@ export const LotPage = () => {
     }
 
     const controller = new AbortController();
+    const hasAccessToken = Boolean(getAccessToken());
 
     const fetchLot = async () => {
       try {
@@ -35,7 +46,38 @@ export const LotPage = () => {
       }
     };
 
+    const fetchBidHistory = async () => {
+      if (!hasAccessToken) {
+        return;
+      }
+
+      try {
+        const result = await bidsService.getBidHistory(id, controller.signal);
+        setBidHistory({
+          id,
+          result,
+          error: null,
+          isLoading: false,
+          requiresSignIn: false,
+        });
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setBidHistory({
+            id,
+            result: null,
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to fetch bid history',
+            isLoading: false,
+            requiresSignIn: false,
+          });
+        }
+      }
+    };
+
     void fetchLot();
+    void fetchBidHistory();
     return () => controller.abort();
   }, [id]);
 
@@ -47,6 +89,18 @@ export const LotPage = () => {
     : currentResult
       ? currentResult.error
       : null;
+  const currentBidHistory =
+    bidHistory?.id === id
+      ? bidHistory
+      : id
+        ? {
+            id,
+            result: null,
+            error: null,
+            isLoading: Boolean(getAccessToken()),
+            requiresSignIn: !getAccessToken(),
+          }
+        : null;
 
   return (
     <section>
@@ -56,6 +110,35 @@ export const LotPage = () => {
       {isLoading && <p>Loading lot…</p>}
       {error && <p role="alert">{error}</p>}
       {!isLoading && !error && lot && <LotCard lot={lot} variant="details" />}
+      {!isLoading && !error && lot && (
+        <section aria-labelledby="bid-history-heading">
+          <h2 id="bid-history-heading">Bid history</h2>
+          {currentBidHistory?.isLoading && <p>Loading bid history…</p>}
+          {currentBidHistory?.requiresSignIn && (
+            <p>
+              <Link to="/auth/login">Sign in</Link> to view bid history.
+            </p>
+          )}
+          {currentBidHistory?.error && (
+            <p role="alert">{currentBidHistory.error}</p>
+          )}
+          {currentBidHistory?.result &&
+            (currentBidHistory.result.bids.length > 0 ? (
+              <ol>
+                {currentBidHistory.result.bids.map((bid, index) => (
+                  <li key={`${bid.createdAt}-${index}`}>
+                    <span>Price: {bid.amount}</span>{' '}
+                    <time dateTime={bid.createdAt}>
+                      {new Date(bid.createdAt).toLocaleString()}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p>No bids have been placed yet.</p>
+            ))}
+        </section>
+      )}
     </section>
   );
 };

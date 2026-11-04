@@ -13,12 +13,22 @@ export const LotsCatalogPage = () => {
   const [lots, setLots] = useState<LotCatalogItem[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<AuctionStatus | ''>('');
+  const [auctionStartFrom, setAuctionStartFrom] = useState('');
+  const [auctionStartTo, setAuctionStartTo] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (
+      auctionStartFrom &&
+      auctionStartTo &&
+      auctionStartFrom > auctionStartTo
+    ) {
+      return;
+    }
+
     let isMounted = true;
 
     const fetchLots = async () => {
@@ -27,9 +37,17 @@ export const LotsCatalogPage = () => {
         limit: PAGE_SIZE,
         name: search.trim() || undefined,
         status: status || undefined,
+        auctionStartFrom: auctionStartFrom
+          ? new Date(`${auctionStartFrom}T00:00:00`).toISOString()
+          : undefined,
+        auctionStartTo: auctionStartTo
+          ? new Date(`${auctionStartTo}T23:59:59.999`).toISOString()
+          : undefined,
       };
 
       try {
+        setIsLoading(true);
+        setError('');
         const result = await lotsService.getLots(params);
         if (isMounted) {
           setLots(result.lots);
@@ -52,7 +70,7 @@ export const LotsCatalogPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [page, search, status]);
+  }, [page, search, status, auctionStartFrom, auctionStartTo]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -63,6 +81,21 @@ export const LotsCatalogPage = () => {
     setStatus(value === '' ? '' : (value as AuctionStatus));
     setPage(1);
   };
+
+  const handleAuctionStartFromChange = (value: string) => {
+    setAuctionStartFrom(value);
+    setPage(1);
+  };
+
+  const handleAuctionStartToChange = (value: string) => {
+    setAuctionStartTo(value);
+    setPage(1);
+  };
+
+  const dateRangeError =
+    auctionStartFrom && auctionStartTo && auctionStartFrom > auctionStartTo
+      ? 'Start date must not be after end date.'
+      : '';
 
   return (
     <section>
@@ -90,27 +123,53 @@ export const LotsCatalogPage = () => {
           aria-label="Filter lots by status"
         >
           <option value="">All statuses</option>
-          <option value="DRAFT">DRAFT</option>
           <option value="SCHEDULED">SCHEDULED</option>
           <option value="ACTIVE">ACTIVE</option>
           <option value="ENDED">ENDED</option>
-          <option value="CANCELLED">CANCELLED</option>
         </select>
+
+        <label>
+          Auction starts from
+          <input
+            type="date"
+            value={auctionStartFrom}
+            max={auctionStartTo || undefined}
+            onChange={(event) =>
+              handleAuctionStartFromChange(event.target.value)
+            }
+            aria-label="Auction starts from"
+          />
+        </label>
+
+        <label>
+          Auction starts to
+          <input
+            type="date"
+            value={auctionStartTo}
+            min={auctionStartFrom || undefined}
+            onChange={(event) => handleAuctionStartToChange(event.target.value)}
+            aria-label="Auction starts to"
+          />
+        </label>
       </div>
 
-      {isLoading && <p>Loading lots…</p>}
-      {error && <p role="alert">{error}</p>}
-      {!isLoading && !error && lots.length === 0 && <p>No lots found.</p>}
+      {dateRangeError && <p role="alert">{dateRangeError}</p>}
+      {isLoading && !dateRangeError && <p>Loading lots…</p>}
+      {error && !dateRangeError && <p role="alert">{error}</p>}
+      {!isLoading && !error && !dateRangeError && lots.length === 0 && (
+        <p>No lots found.</p>
+      )}
 
       <ul>
-        {lots.map((lot) => (
-          <li key={lot.id}>
-            <LotCard lot={lot} />
-          </li>
-        ))}
+        {!dateRangeError &&
+          lots.map((lot) => (
+            <li key={lot.id}>
+              <LotCard lot={lot} />
+            </li>
+          ))}
       </ul>
 
-      {!isLoading && !error && totalPages > 1 && (
+      {!isLoading && !error && !dateRangeError && totalPages > 1 && (
         <div
           style={{
             display: 'flex',
@@ -119,14 +178,19 @@ export const LotsCatalogPage = () => {
             marginTop: '16px',
           }}
         >
-          <button onClick={() => setPage((current) => Math.max(current - 1, 1))} disabled={page === 1}>
+          <button
+            onClick={() => setPage((current) => Math.max(current - 1, 1))}
+            disabled={page === 1}
+          >
             Prev
           </button>
           <span>
             Page {page} / {totalPages}
           </span>
           <button
-            onClick={() => setPage((current) => Math.min(current + 1, totalPages))}
+            onClick={() =>
+              setPage((current) => Math.min(current + 1, totalPages))
+            }
             disabled={page >= totalPages}
           >
             Next

@@ -16,6 +16,15 @@ const getBackendMessage = (data: unknown): string | undefined => {
   if (typeof message === 'string' && message.trim()) {
     return message;
   }
+  if (
+    typeof message === 'object' &&
+    message !== null &&
+    'message' in message &&
+    typeof message.message === 'string' &&
+    message.message.trim()
+  ) {
+    return message.message;
+  }
   if (Array.isArray(message)) {
     const messages = message.filter(
       (item): item is string =>

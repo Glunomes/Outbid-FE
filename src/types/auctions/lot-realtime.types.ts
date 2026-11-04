@@ -20,5 +20,4 @@ export type LotRealtimeState = {
   bids: LotBid[];
   seenBidIds: string[];
   connectionError: string | null;
-  statusCheckError: string | null;
 };

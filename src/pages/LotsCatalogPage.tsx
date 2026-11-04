@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LotCard } from '../components/LotCard';
+import { LotsCatalogFilters } from '../components/LotsCatalogFilters';
+import { LotsPagination } from '../components/LotsPagination';
 import lotsService from '../services/lotsService';
 import type {
   AuctionStatus,
@@ -77,8 +79,8 @@ export const LotsCatalogPage = () => {
     setPage(1);
   };
 
-  const handleStatusChange = (value: string) => {
-    setStatus(value === '' ? '' : (value as AuctionStatus));
+  const handleStatusChange = (value: AuctionStatus | '') => {
+    setStatus(value);
     setPage(1);
   };
 
@@ -101,57 +103,16 @@ export const LotsCatalogPage = () => {
     <section>
       <h2>Lots</h2>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          marginBottom: '16px',
-        }}
-      >
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => handleSearchChange(event.target.value)}
-          placeholder="Search by name"
-          aria-label="Search lots by name"
-        />
-
-        <select
-          value={status}
-          onChange={(event) => handleStatusChange(event.target.value)}
-          aria-label="Filter lots by status"
-        >
-          <option value="">All statuses</option>
-          <option value="SCHEDULED">SCHEDULED</option>
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="ENDED">ENDED</option>
-        </select>
-
-        <label>
-          Auction starts from
-          <input
-            type="date"
-            value={auctionStartFrom}
-            max={auctionStartTo || undefined}
-            onChange={(event) =>
-              handleAuctionStartFromChange(event.target.value)
-            }
-            aria-label="Auction starts from"
-          />
-        </label>
-
-        <label>
-          Auction starts to
-          <input
-            type="date"
-            value={auctionStartTo}
-            min={auctionStartFrom || undefined}
-            onChange={(event) => handleAuctionStartToChange(event.target.value)}
-            aria-label="Auction starts to"
-          />
-        </label>
-      </div>
+      <LotsCatalogFilters
+        search={search}
+        status={status}
+        auctionStartFrom={auctionStartFrom}
+        auctionStartTo={auctionStartTo}
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onAuctionStartFromChange={handleAuctionStartFromChange}
+        onAuctionStartToChange={handleAuctionStartToChange}
+      />
 
       {dateRangeError && <p role="alert">{dateRangeError}</p>}
       {isLoading && !dateRangeError && <p>Loading lots…</p>}
@@ -170,32 +131,12 @@ export const LotsCatalogPage = () => {
       </ul>
 
       {!isLoading && !error && !dateRangeError && totalPages > 1 && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginTop: '16px',
-          }}
-        >
-          <button
-            onClick={() => setPage((current) => Math.max(current - 1, 1))}
-            disabled={page === 1}
-          >
-            Prev
-          </button>
-          <span>
-            Page {page} / {totalPages}
-          </span>
-          <button
-            onClick={() =>
-              setPage((current) => Math.min(current + 1, totalPages))
-            }
-            disabled={page >= totalPages}
-          >
-            Next
-          </button>
-        </div>
+        <LotsPagination
+          page={page}
+          totalPages={totalPages}
+          onPrevious={() => setPage((current) => Math.max(current - 1, 1))}
+          onNext={() => setPage((current) => Math.min(current + 1, totalPages))}
+        />
       )}
     </section>
   );

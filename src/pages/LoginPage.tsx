@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import registrationService from '../services/authService';
+import { AuthFormField } from '../components/AuthFormField';
 import {
   loginRequestSchema,
   type LoginRequest,
@@ -49,40 +50,22 @@ export const LoginPage = () => {
       )}
       {error && <p role="alert">{error}</p>}
       <form onSubmit={handleSubmit(handleLoginSubmit)} noValidate>
-        <div>
-          <label htmlFor="login-email">Email</label>
-          <input
-            id="login-email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? 'login-email-error' : undefined}
-            {...register('email')}
-          />
-          {errors.email && (
-            <p id="login-email-error" role="alert">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="login-password">Password</label>
-          <input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={
-              errors.password ? 'login-password-error' : undefined
-            }
-            {...register('password')}
-          />
-          {errors.password && (
-            <p id="login-password-error" role="alert">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+        <AuthFormField
+          id="login-email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          registration={register('email')}
+          error={errors.email?.message}
+        />
+        <AuthFormField
+          id="login-password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          registration={register('password')}
+          error={errors.password?.message}
+        />
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Signing in…' : 'Sign in'}
         </button>

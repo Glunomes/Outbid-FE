@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import registrationService from '../services/authService';
+import { AuthFormField } from '../components/AuthFormField';
 import {
   registerRequestSchema,
   type RegisterRequest,
@@ -37,55 +38,29 @@ export const RegistrationPage = () => {
     <div>
       {error && <p role="alert">{error}</p>}
       <form onSubmit={handleSubmit(handleRegistrationSubmit)} noValidate>
-        <div>
-          <label htmlFor="register-name">Name</label>
-          <input
-            id="register-name"
-            type="text"
-            aria-invalid={Boolean(errors.name)}
-            aria-describedby={errors.name ? 'register-name-error' : undefined}
-            {...register('name')}
-          />
-          {errors.name && (
-            <p id="register-name-error" role="alert">
-              {errors.name.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="register-email">Email</label>
-          <input
-            id="register-email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? 'register-email-error' : undefined}
-            {...register('email')}
-          />
-          {errors.email && (
-            <p id="register-email-error" role="alert">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="register-password">Password</label>
-          <input
-            id="register-password"
-            type="password"
-            autoComplete="new-password"
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={
-              errors.password ? 'register-password-error' : undefined
-            }
-            {...register('password')}
-          />
-          {errors.password && (
-            <p id="register-password-error" role="alert">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+        <AuthFormField
+          id="register-name"
+          label="Name"
+          type="text"
+          registration={register('name')}
+          error={errors.name?.message}
+        />
+        <AuthFormField
+          id="register-email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          registration={register('email')}
+          error={errors.email?.message}
+        />
+        <AuthFormField
+          id="register-password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          registration={register('password')}
+          error={errors.password?.message}
+        />
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Creating account…' : 'Create account'}
         </button>

@@ -1,6 +1,7 @@
 import api from './httpClient';
 import {
   lotsCatalogResponseSchema,
+  type LotsCatalogQueryInput,
   type LotsCatalogResponse,
 } from '../schemas/lots/lots-catalog.schema';
 import {
@@ -8,8 +9,10 @@ import {
   type LotDetails,
 } from '../schemas/lots/lot-details.schema';
 
-const getLots = async (): Promise<LotsCatalogResponse> => {
-  const response = await api.get('/lots');
+const getLots = async (
+  params?: LotsCatalogQueryInput,
+): Promise<LotsCatalogResponse> => {
+  const response = await api.get('/lots', { params });
   return lotsCatalogResponseSchema.parse(response.data);
 };
 

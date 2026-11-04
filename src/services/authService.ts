@@ -18,12 +18,16 @@ import api from './httpClient';
 const registerUser = async (
   data: RegisterRequest,
 ): Promise<RegisterResponse> => {
-  const response = await api.post<RegisterResponse>('/auth/register', data);
+  const response = await api.post<RegisterResponse>('/auth/register', data, {
+    skipAuth: true,
+  });
   return registerResponseSchema.parse(response.data);
 };
 
 const login = async (data: LoginRequest): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/auth/login', data);
+  const response = await api.post<LoginResponse>('/auth/login', data, {
+    skipAuth: true,
+  });
   const tokens = loginResponseSchema.parse(response.data);
 
   if (!tokens.accessToken || !tokens.refreshToken) {

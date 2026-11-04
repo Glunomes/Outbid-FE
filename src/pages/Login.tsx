@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useLocation, useNavigate } from 'react-router-dom';
 import registrationService from '../services/authService';
 import {
   loginRequestSchema,
@@ -9,6 +10,13 @@ import {
 
 export const LoginPage = () => {
   const [error, setError] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const sessionExpired =
+    typeof location.state === 'object' &&
+    location.state !== null &&
+    'sessionExpired' in location.state &&
+    location.state.sessionExpired === true;
 
   const {
     register,
@@ -25,6 +33,9 @@ export const LoginPage = () => {
       setError('');
       await registrationService.login(data);
       reset();
+      if (sessionExpired) {
+        navigate(location.pathname, { replace: true, state: null });
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Something went wrong');
     }
@@ -32,6 +43,9 @@ export const LoginPage = () => {
 
   return (
     <div>
+      {sessionExpired && (
+        <p role="status">Your session has expired. Please sign in again.</p>
+      )}
       {error && <p role="alert">{error}</p>}
       <form onSubmit={handleSubmit(handleLoginSubmit)} noValidate>
         <div>

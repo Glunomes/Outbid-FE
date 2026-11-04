@@ -1,5 +1,12 @@
 import axios from 'axios';
 import { clearAccessToken, getAccessToken } from './accessTokenStorage';
+import { notifySessionExpired } from './authEvents';
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipAuth?: boolean;
+  }
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
@@ -8,7 +15,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const accessToken = getAccessToken();
+  const accessToken = config.skipAuth ? null : getAccessToken();
   if (accessToken) {
     config.headers.set('Authorization', `Bearer ${accessToken}`);
   }
@@ -104,6 +111,9 @@ api.interceptors.response.use(
     const { status, data } = error.response;
     if (status === 401) {
       clearAccessToken();
+      if (!error.config?.skipAuth) {
+        notifySessionExpired();
+      }
     }
 
     return Promise.reject(

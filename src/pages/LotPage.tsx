@@ -10,7 +10,6 @@ import lotsService from '../services/lotsService';
 
 export const LotPage = () => {
   const { id } = useParams();
-  const realtime = useLotRealtime(id);
   const [result, setResult] = useState<{
     id: string;
     lot: LotDetails | null;
@@ -23,6 +22,10 @@ export const LotPage = () => {
     isLoading: boolean;
     requiresSignIn: boolean;
   } | null>(null);
+
+  const currentResult = result?.id === id ? result : null;
+  const initialLot = currentResult?.lot ?? null;
+  const realtime = useLotRealtime(id, initialLot);
 
   useEffect(() => {
     if (!id) {
@@ -84,7 +87,6 @@ export const LotPage = () => {
   }, [id]);
 
   const isLoading = Boolean(id) && !realtime.lot && result?.id !== id;
-  const currentResult = result?.id === id ? result : null;
   const lot = realtime.lot ?? currentResult?.lot ?? null;
   const error = lot
     ? null
@@ -123,6 +125,12 @@ export const LotPage = () => {
           <h2 id="bid-history-heading">Bid history</h2>
           {realtime.connectionError && (
             <p role="status">{realtime.connectionError}</p>
+          )}
+          {realtime.statusCheckError && (
+            <p role="status">
+              Could not verify the auction status: {realtime.statusCheckError}
+              Retrying…
+            </p>
           )}
           {currentBidHistory?.isLoading && !realtime.hasSnapshot && (
             <p>Loading bid history…</p>

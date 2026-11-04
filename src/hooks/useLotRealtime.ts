@@ -1,62 +1,25 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { z } from 'zod';
-import type { BidHistoryResponse } from '../schemas/bids/bid-history.schema';
-import { auctionStatusSchema } from '../schemas/lots/lots-catalog.schema';
+import {
+  auctionExtendedSchema,
+  bidPlacedSchema,
+  lotStateSchema,
+} from '../schemas/auctions/lot-realtime.schema';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
+import lotsService from '../services/lotsService';
+import type { LotRealtimeState } from '../types/auctions/lot-realtime.types';
 
-const lotStateSchema = z.object({
-  lot: z.object({
-    id: z.uuid(),
-    name: z.string(),
-    description: z.string().nullable(),
-    startingPrice: z.string(),
-    currentPrice: z.string().nullable(),
-    auctionStart: z.iso.datetime().nullable(),
-    auctionEnd: z.iso.datetime().nullable(),
-    status: auctionStatusSchema,
-    createdAt: z.iso.datetime(),
-    updatedAt: z.iso.datetime(),
-    seller: z.object({ name: z.string() }),
-  }),
-  bids: z.array(
-    z.object({
-      amount: z.string(),
-      createdAt: z.iso.datetime(),
-    }),
-  ),
-});
+const STATUS_RECHECK_INTERVAL_MS = 5_000;
+const MAX_TIMEOUT_MS = 2_147_000_000;
 
-const bidPlacedSchema = z.object({
-  bidId: z.uuid(),
-  lotId: z.uuid(),
-  amount: z.string(),
-  currentPrice: z.string(),
-  auctionEnd: z.iso.datetime(),
-  createdAt: z.iso.datetime(),
-});
-
-const auctionExtendedSchema = z.object({
-  lotId: z.uuid(),
-  auctionEnd: z.iso.datetime(),
-});
-
-type LotBid = BidHistoryResponse['bids'][number];
-
-type RealtimeState = {
-  lotId: string;
-  lot: LotDetails | null;
-  bids: LotBid[];
-  seenBidIds: string[];
-  connectionError: string | null;
-};
-
-const initialState = (lotId: string): RealtimeState => ({
+const initialState = (lotId: string): LotRealtimeState => ({
   lotId,
   lot: null,
+  hasSnapshot: false,
   bids: [],
   seenBidIds: [],
   connectionError: null,
+  statusCheckError: null,
 });
 
 const getSocketUrl = () => {
@@ -66,8 +29,11 @@ const getSocketUrl = () => {
     : undefined;
 };
 
-export const useLotRealtime = (lotId: string | undefined) => {
-  const [state, setState] = useState<RealtimeState | null>(null);
+export const useLotRealtime = (
+  lotId: string | undefined,
+  initialLot: LotDetails | null,
+) => {
+  const [state, setState] = useState<LotRealtimeState | null>(null);
 
   useEffect(() => {
     if (!lotId) {
@@ -76,7 +42,9 @@ export const useLotRealtime = (lotId: string | undefined) => {
 
     const socket = io(getSocketUrl(), { autoConnect: false });
 
-    const updateState = (update: (current: RealtimeState) => RealtimeState) => {
+    const updateState = (
+      update: (current: LotRealtimeState) => LotRealtimeState,
+    ) => {
       setState((current) =>
         update(current?.lotId === lotId ? current : initialState(lotId)),
       );
@@ -104,9 +72,11 @@ export const useLotRealtime = (lotId: string | undefined) => {
       updateState((current) => ({
         ...current,
         lot: parsed.data.lot,
+        hasSnapshot: true,
         bids: parsed.data.bids,
         seenBidIds: [],
         connectionError: null,
+        statusCheckError: null,
       }));
     };
 
@@ -143,6 +113,7 @@ export const useLotRealtime = (lotId: string | undefined) => {
           ].slice(0, 25),
           seenBidIds: [...current.seenBidIds, bid.bidId],
           connectionError: null,
+          statusCheckError: null,
         };
       });
     };
@@ -167,6 +138,7 @@ export const useLotRealtime = (lotId: string | undefined) => {
               ...current,
               lot: { ...current.lot, auctionEnd: parsed.data.auctionEnd },
               connectionError: null,
+              statusCheckError: null,
             }
           : current,
       );
@@ -220,11 +192,88 @@ export const useLotRealtime = (lotId: string | undefined) => {
   }, [lotId]);
 
   const currentState = state?.lotId === lotId ? state : null;
+  const currentLot = currentState?.lot ?? initialLot;
+
+  useEffect(() => {
+    if (!lotId || currentLot?.status !== 'ACTIVE' || !currentLot.auctionEnd) {
+      return;
+    }
+
+    const auctionEnd = Date.parse(currentLot.auctionEnd);
+    if (Number.isNaN(auctionEnd)) {
+      return;
+    }
+
+    let timer: number | undefined;
+    let controller: AbortController | undefined;
+
+    const checkStatus = async () => {
+      if (Date.now() < auctionEnd) {
+        timer = window.setTimeout(
+          () => void checkStatus(),
+          Math.min(auctionEnd - Date.now(), MAX_TIMEOUT_MS),
+        );
+        return;
+      }
+
+      controller = new AbortController();
+      try {
+        const updatedLot = await lotsService.getLotById(
+          lotId,
+          controller.signal,
+        );
+        setState((current) =>
+          current?.lotId === lotId
+            ? { ...current, lot: updatedLot, statusCheckError: null }
+            : { ...initialState(lotId), lot: updatedLot },
+        );
+
+        if (
+          updatedLot.status === 'ACTIVE' &&
+          updatedLot.auctionEnd &&
+          Date.parse(updatedLot.auctionEnd) <= Date.now()
+        ) {
+          timer = window.setTimeout(
+            () => void checkStatus(),
+            STATUS_RECHECK_INTERVAL_MS,
+          );
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setState((current) =>
+            current?.lotId === lotId
+              ? {
+                  ...current,
+                  statusCheckError:
+                    error instanceof Error
+                      ? error.message
+                      : 'Could not verify the auction status.',
+                }
+              : current,
+          );
+          timer = window.setTimeout(
+            () => void checkStatus(),
+            STATUS_RECHECK_INTERVAL_MS,
+          );
+        }
+      }
+    };
+
+    void checkStatus();
+
+    return () => {
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+      }
+      controller?.abort();
+    };
+  }, [lotId, currentLot?.auctionEnd, currentLot?.status]);
 
   return {
     lot: currentState?.lot ?? null,
     bids: currentState?.bids ?? [],
-    hasSnapshot: currentState?.lot !== null && currentState?.lot !== undefined,
+    hasSnapshot: currentState?.hasSnapshot ?? false,
     connectionError: currentState?.connectionError ?? null,
+    statusCheckError: currentState?.statusCheckError ?? null,
   };
 };

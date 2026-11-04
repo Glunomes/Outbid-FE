@@ -19,11 +19,7 @@ export const LotCard = (props: LotCardProps) => {
   return (
     <article>
       <h2>
-        {isDetails ? (
-          lot.name
-        ) : (
-          <Link to={`/lots/${lot.id}`}>{lot.name}</Link>
-        )}
+        {isDetails ? lot.name : <Link to={`/lots/${lot.id}`}>{lot.name}</Link>}
       </h2>
       {lot.description && <p>{lot.description}</p>}
       <p>Price: {price}</p>

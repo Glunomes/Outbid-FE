@@ -36,6 +36,7 @@ export const LoginPage = () => {
       if (sessionExpired) {
         navigate(location.pathname, { replace: true, state: null });
       }
+      navigate('/lots');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Something went wrong');
     }

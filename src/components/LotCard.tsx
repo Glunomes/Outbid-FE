@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
 import type { LotCatalogItem } from '../schemas/lots/lots-catalog.schema';
 
@@ -17,7 +18,13 @@ export const LotCard = (props: LotCardProps) => {
 
   return (
     <article>
-      <h2>{lot.name}</h2>
+      <h2>
+        {isDetails ? (
+          lot.name
+        ) : (
+          <Link to={`/lots/${lot.id}`}>{lot.name}</Link>
+        )}
+      </h2>
       {lot.description && <p>{lot.description}</p>}
       <p>Price: {price}</p>
       <p>Status: {lot.status}</p>

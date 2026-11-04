@@ -1,8 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import SessionExpiryHandler from './components/SessionExpiryHandler';
 import { RegistrationPage } from './pages/RegistrationPage';
-import { LoginPage } from './pages/Login';
+import { LoginPage } from './pages/LoginPage';
 import { LotsCatalogPage } from './pages/LotsCatalogPage';
+import { LotPage } from './pages/LotPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/auth/register" element={<RegistrationPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/lots" element={<LotsCatalogPage />} />
+        <Route path="/lots/:id" element={<LotPage />} />
       </Routes>
     </div>
   );

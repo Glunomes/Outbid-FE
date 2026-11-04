@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LotCard } from '../components/LotCard';
+import { useLotRealtime } from '../hooks/useLotRealtime';
 import type { BidHistoryResponse } from '../schemas/bids/bid-history.schema';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
 import { getAccessToken } from '../services/accessTokenStorage';
@@ -9,6 +10,7 @@ import lotsService from '../services/lotsService';
 
 export const LotPage = () => {
   const { id } = useParams();
+  const realtime = useLotRealtime(id);
   const [result, setResult] = useState<{
     id: string;
     lot: LotDetails | null;
@@ -81,14 +83,16 @@ export const LotPage = () => {
     return () => controller.abort();
   }, [id]);
 
-  const isLoading = Boolean(id) && result?.id !== id;
+  const isLoading = Boolean(id) && !realtime.lot && result?.id !== id;
   const currentResult = result?.id === id ? result : null;
-  const lot = currentResult?.lot ?? null;
-  const error = !id
-    ? 'Lot ID is missing.'
-    : currentResult
-      ? currentResult.error
-      : null;
+  const lot = realtime.lot ?? currentResult?.lot ?? null;
+  const error = lot
+    ? null
+    : !id
+      ? 'Lot ID is missing.'
+      : currentResult
+        ? currentResult.error
+        : null;
   const currentBidHistory =
     bidHistory?.id === id
       ? bidHistory
@@ -101,6 +105,10 @@ export const LotPage = () => {
             requiresSignIn: !getAccessToken(),
           }
         : null;
+  const canViewBidHistory = Boolean(getAccessToken());
+  const displayedBids = realtime.hasSnapshot
+    ? realtime.bids
+    : (currentBidHistory?.result?.bids ?? []);
 
   return (
     <section>
@@ -113,19 +121,24 @@ export const LotPage = () => {
       {!isLoading && !error && lot && (
         <section aria-labelledby="bid-history-heading">
           <h2 id="bid-history-heading">Bid history</h2>
-          {currentBidHistory?.isLoading && <p>Loading bid history…</p>}
+          {realtime.connectionError && (
+            <p role="status">{realtime.connectionError}</p>
+          )}
+          {currentBidHistory?.isLoading && !realtime.hasSnapshot && (
+            <p>Loading bid history…</p>
+          )}
           {currentBidHistory?.requiresSignIn && (
             <p>
               <Link to="/auth/login">Sign in</Link> to view bid history.
             </p>
           )}
-          {currentBidHistory?.error && (
+          {currentBidHistory?.error && !realtime.hasSnapshot && (
             <p role="alert">{currentBidHistory.error}</p>
           )}
-          {currentBidHistory?.result &&
-            (currentBidHistory.result.bids.length > 0 ? (
+          {canViewBidHistory &&
+            (displayedBids.length > 0 ? (
               <ol>
-                {currentBidHistory.result.bids.map((bid, index) => (
+                {displayedBids.map((bid, index) => (
                   <li key={`${bid.createdAt}-${index}`}>
                     <span>Price: {bid.amount}</span>{' '}
                     <time dateTime={bid.createdAt}>
@@ -135,7 +148,10 @@ export const LotPage = () => {
                 ))}
               </ol>
             ) : (
-              <p>No bids have been placed yet.</p>
+              !currentBidHistory?.isLoading &&
+              !currentBidHistory?.requiresSignIn && (
+                <p>No bids have been placed yet.</p>
+              )
             ))}
         </section>
       )}

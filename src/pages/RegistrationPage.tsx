@@ -1,12 +1,15 @@
 import { useState, type SyntheticEvent } from "react";
+import { useNavigate } from 'react-router-dom';
 import registrationService from "../services/authService";
 
-const Registation = () => {
+export const RegistrationPage = () => {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const navigate = useNavigate();
 
   const handeRegistrationSubmit = async(event: SyntheticEvent) => {
     event.preventDefault()
@@ -15,7 +18,8 @@ const Registation = () => {
       await registrationService.registerUser({ name, email, password });
       setEmail('');
       setName('');
-      setPassword('')
+      setPassword('');
+      navigate('/auth/login', { replace:true })
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Something went wrong',
@@ -57,5 +61,3 @@ const Registation = () => {
     </div>
   )
 }
-
-export default Registation;

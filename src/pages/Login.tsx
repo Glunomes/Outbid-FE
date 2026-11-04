@@ -1,7 +1,7 @@
 import { useState, type SyntheticEvent } from "react";
 import registrationService from "../services/authService";
 
-const Login = () => {
+export const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,5 +47,3 @@ const Login = () => {
     </div>
   )
 }
-
-export default Login;

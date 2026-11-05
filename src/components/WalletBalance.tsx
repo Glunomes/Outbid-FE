@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
-import type { WalletResponse } from '../schemas/wallets/wallet.schema';
+import { useEffect, useState, type FormEvent } from 'react';
+import {
+  walletDepositSchema,
+  type WalletResponse,
+} from '../schemas/wallets/wallet.schema';
 import {
   AUTH_STATE_CHANGED_EVENT,
   WALLET_UPDATED_EVENT,
@@ -15,6 +18,10 @@ export const WalletBalance = () => {
   );
   const [wallet, setWallet] = useState<WalletResponse | null>(null);
   const [error, setError] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositError, setDepositError] = useState('');
+  const [depositMessage, setDepositMessage] = useState('');
+  const [isDepositing, setIsDepositing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -93,6 +100,41 @@ export const WalletBalance = () => {
     return null;
   }
 
+  const handleDeposit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setDepositError('');
+    setDepositMessage('');
+
+    const parsedAmount = walletDepositSchema.safeParse({
+      amount: depositAmount,
+    });
+    if (!parsedAmount.success) {
+      setDepositError(
+        parsedAmount.error.issues[0]?.message ?? 'Enter a valid amount.',
+      );
+      return;
+    }
+
+    try {
+      setIsDepositing(true);
+      const updatedWallet =
+        await walletsService.depositToMyWallet(parsedAmount.data);
+      setWallet(updatedWallet);
+      setDepositAmount('');
+      setDepositMessage(
+        'Virtual funds added. This is not a payment and no money was charged.',
+      );
+    } catch (depositFailure) {
+      setDepositError(
+        depositFailure instanceof Error
+          ? depositFailure.message
+          : 'Failed to add virtual funds.',
+      );
+    } finally {
+      setIsDepositing(false);
+    }
+  };
+
   return (
     <aside aria-label="Wallet balance">
       <h2>Balance</h2>
@@ -113,6 +155,38 @@ export const WalletBalance = () => {
       {!wallet && !isLoading && !error && (
         <p>Balance is currently unavailable.</p>
       )}
+      <form onSubmit={handleDeposit} noValidate>
+        <h3>Add virtual funds</h3>
+        <p>
+          Demo balance only. This adds virtual funds and is not a payment; no
+          money will be charged.
+        </p>
+        <label htmlFor="wallet-deposit-amount">Amount</label>
+        <input
+          id="wallet-deposit-amount"
+          type="text"
+          inputMode="decimal"
+          value={depositAmount}
+          onChange={(event) => {
+            setDepositAmount(event.target.value);
+            setDepositError('');
+            setDepositMessage('');
+          }}
+          aria-invalid={Boolean(depositError)}
+          aria-describedby={
+            depositError ? 'wallet-deposit-error' : undefined
+          }
+        />
+        {depositError && (
+          <p id="wallet-deposit-error" role="alert">
+            {depositError}
+          </p>
+        )}
+        {depositMessage && <p role="status">{depositMessage}</p>}
+        <button type="submit" disabled={isDepositing}>
+          {isDepositing ? 'Adding virtual funds…' : 'Add virtual funds'}
+        </button>
+      </form>
     </aside>
   );
 };

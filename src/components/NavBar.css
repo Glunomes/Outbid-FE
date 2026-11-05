@@ -1,0 +1,67 @@
+.app-header {
+  align-items: center;
+  border-bottom: 1px solid #d5d9df;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+.app-brand {
+  color: #172033;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-navigation {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.app-navigation-link,
+.app-navigation-button {
+  color: #39445a;
+  font: inherit;
+}
+
+.app-navigation-link {
+  text-decoration: none;
+}
+
+.app-navigation-link:hover,
+.app-navigation-link.is-active {
+  color: #1457b8;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+.app-navigation-button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.app-navigation-button:hover {
+  color: #1457b8;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+.app-brand:focus-visible,
+.app-navigation-link:focus-visible,
+.app-navigation-button:focus-visible {
+  outline: 2px solid #1457b8;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

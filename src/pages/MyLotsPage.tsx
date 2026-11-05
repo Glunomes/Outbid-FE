@@ -29,11 +29,6 @@ export const MyLotsPage = () => {
   return (
     <section>
       <h2>My lots</h2>
-      <p>
-        <Link to="/lots">All lots</Link>
-        {' · '}
-        <Link to="/lots/new">Create a lot</Link>
-      </p>
 
       {!isAuthenticated && (
         <p>

@@ -1,5 +1,6 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import SessionExpiryHandler from './components/SessionExpiryHandler';
+import { NavBar } from './components/NavBar';
 import { RegistrationPage } from './pages/RegistrationPage';
 import { LoginPage } from './pages/LoginPage';
 import { LotsCatalogPage } from './pages/LotsCatalogPage';
@@ -12,10 +13,11 @@ import { WalletBalance } from './components/WalletBalance';
 function App() {
   return (
     <div>
-      <h1>Outbid</h1>
+      <NavBar />
       <WalletBalance />
       <SessionExpiryHandler />
       <Routes>
+        <Route path="/" element={<Navigate to="/lots" replace />} />
         <Route path="/auth/register" element={<RegistrationPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/my-lots" element={<MyLotsPage />} />

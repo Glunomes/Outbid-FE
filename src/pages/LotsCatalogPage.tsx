@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { LotCard } from '../components/LotCard';
 import { LotsCatalogFilters } from '../components/LotsCatalogFilters';
 import { LotsPagination } from '../components/LotsPagination';
+import { WalletBalance } from '../components/WalletBalance';
 import lotsService from '../services/lotsService';
 import { PAGE_SIZE, usePaginatedList } from '../hooks/usePaginatedList';
 import type {
@@ -72,6 +73,7 @@ export const LotsCatalogPage = () => {
   return (
     <section>
       <h2>Lots</h2>
+      <WalletBalance />
 
       <LotsCatalogFilters
         search={search}

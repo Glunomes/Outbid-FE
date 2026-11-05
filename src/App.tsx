@@ -8,19 +8,19 @@ import { LotPage } from './pages/LotPage';
 import EditLotPage from './pages/EditLotPage';
 import { MyLotsPage } from './pages/MyLotsPage';
 import { CreateLotPage } from './pages/CreateLotPage';
-import { WalletBalance } from './components/WalletBalance';
+import { WalletPage } from './pages/WalletPage';
 
 function App() {
   return (
     <div>
       <NavBar />
-      <WalletBalance />
       <SessionExpiryHandler />
       <Routes>
         <Route path="/" element={<Navigate to="/lots" replace />} />
         <Route path="/auth/register" element={<RegistrationPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/my-lots" element={<MyLotsPage />} />
+        <Route path="/wallet" element={<WalletPage />} />
         <Route path="/lots" element={<LotsCatalogPage />} />
         <Route path="/lots/new" element={<CreateLotPage />} />
         <Route path="/lots/:id/edit" element={<EditLotPage />} />

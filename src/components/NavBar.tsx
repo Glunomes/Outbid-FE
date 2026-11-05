@@ -61,6 +61,16 @@ export const NavBar = () => {
         </NavLink>
         {isAuthenticated ? (
           <>
+            <NavLink
+              to="/wallet"
+              className={({ isActive }) =>
+                isActive
+                  ? 'app-navigation-link is-active'
+                  : 'app-navigation-link'
+              }
+            >
+              Wallet
+            </NavLink>
             <button
               className="app-navigation-button"
               type="button"

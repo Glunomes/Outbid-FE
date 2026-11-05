@@ -3,7 +3,7 @@ import { auctionStatusSchema } from './lots-catalog.schema';
 
 const MAX_AUCTION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
-const lotPriceSchema = z
+export const lotPriceSchema = z
   .string()
   .regex(
     /^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/,

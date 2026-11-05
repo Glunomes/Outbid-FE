@@ -185,7 +185,14 @@ export const useLotRealtime = (
   }, [lotId]);
 
   const currentState = state?.lotId === lotId ? state : null;
-  const currentLot = currentState?.lot ?? initialLot;
+  const currentLot =
+    currentState?.lot && initialLot
+      ? {
+          ...initialLot,
+          ...currentState.lot,
+          seller: initialLot.seller,
+        }
+      : initialLot;
   const onLotRefresh = useCallback(
     (updatedLot: LotDetails) => {
       if (!lotId) {

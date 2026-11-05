@@ -12,7 +12,7 @@ export const lotDetailsSchema = z.object({
   status: auctionStatusSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
-  seller: z.object({ name: z.string() }),
+  seller: z.object({ id: z.uuid(), name: z.string() }),
 });
 
 export type LotDetails = z.infer<typeof lotDetailsSchema>;

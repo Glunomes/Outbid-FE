@@ -7,6 +7,8 @@ type LotFormFieldProps = {
   error?: string;
   type?: 'text' | 'datetime-local';
   inputMode?: 'decimal';
+  step?: string;
+  readOnly?: boolean;
   multiline?: boolean;
 };
 
@@ -17,6 +19,8 @@ export const LotFormField = ({
   error,
   type = 'text',
   inputMode,
+  step,
+  readOnly = false,
   multiline = false,
 }: LotFormFieldProps) => {
   const errorId = `${id}-error`;
@@ -27,6 +31,7 @@ export const LotFormField = ({
       {multiline ? (
         <textarea
           id={id}
+          readOnly={readOnly}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
           {...registration}
@@ -36,6 +41,8 @@ export const LotFormField = ({
           id={id}
           type={type}
           inputMode={inputMode}
+          step={step}
+          readOnly={readOnly}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
           {...registration}

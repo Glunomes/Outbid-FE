@@ -4,6 +4,7 @@ import { RegistrationPage } from './pages/RegistrationPage';
 import { LoginPage } from './pages/LoginPage';
 import { LotsCatalogPage } from './pages/LotsCatalogPage';
 import { LotPage } from './pages/LotPage';
+import EditLotPage from './pages/EditLotPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/auth/register" element={<RegistrationPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/lots" element={<LotsCatalogPage />} />
+        <Route path="/lots/:id/edit" element={<EditLotPage />} />
         <Route path="/lots/:id" element={<LotPage />} />
       </Routes>
     </div>

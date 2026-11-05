@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { LotBid } from '../types/auctions/lot-realtime.types';
+import { formatDateTime } from '../utils/dates/dateTime';
 
 type BidHistoryProps = {
   bids: LotBid[];
@@ -44,7 +45,7 @@ export const BidHistory = ({
             <li key={`${bid.createdAt}-${index}`}>
               <span>Price: {bid.amount}</span>{' '}
               <time dateTime={bid.createdAt}>
-                {new Date(bid.createdAt).toLocaleString()}
+                {formatDateTime(bid.createdAt)}
               </time>
             </li>
           ))}

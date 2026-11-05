@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { LotFormField } from '../components/LotFormField';
+import { LotForm } from '../components/LotForm';
 import {
   createLotSchema,
   type CreateLotInput,
@@ -50,45 +50,26 @@ export const CreateLotPage = () => {
     <main>
       <h2>Create a lot</h2>
       {error && <p role="alert">{error}</p>}
-      <form onSubmit={handleSubmit(handleCreateSubmit)} noValidate>
-        <LotFormField
-          id="lot-name"
-          label="Name"
-          registration={register('name')}
-          error={errors.name?.message}
-        />
-        <LotFormField
-          id="lot-description"
-          label="Description"
-          registration={register('description')}
-          error={errors.description?.message}
-          multiline
-        />
-        <LotFormField
-          id="lot-starting-price"
-          label="Starting price"
-          inputMode="decimal"
-          registration={register('startingPrice')}
-          error={errors.startingPrice?.message}
-        />
-        <LotFormField
-          id="lot-auction-start"
-          label="Auction start"
-          type="datetime-local"
-          registration={registerAuctionDate('auctionStart')}
-          error={errors.auctionStart?.message}
-        />
-        <LotFormField
-          id="lot-auction-end"
-          label="Auction end"
-          type="datetime-local"
-          registration={registerAuctionDate('auctionEnd')}
-          error={errors.auctionEnd?.message}
-        />
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating lot…' : 'Create lot'}
-        </button>
-      </form>
+      <LotForm
+        register={{
+          name: register('name'),
+          description: register('description'),
+          startingPrice: register('startingPrice'),
+          auctionStart: registerAuctionDate('auctionStart'),
+          auctionEnd: registerAuctionDate('auctionEnd'),
+        }}
+        errors={{
+          name: errors.name?.message,
+          description: errors.description?.message,
+          startingPrice: errors.startingPrice?.message,
+          auctionStart: errors.auctionStart?.message,
+          auctionEnd: errors.auctionEnd?.message,
+        }}
+        onSubmit={handleSubmit(handleCreateSubmit)}
+        isSubmitting={isSubmitting}
+        submitLabel="Create lot"
+        submittingLabel="Creating lot…"
+      />
     </main>
   );
 };

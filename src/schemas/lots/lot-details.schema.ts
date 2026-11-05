@@ -1,17 +1,7 @@
 import { z } from 'zod';
-import { auctionStatusSchema } from './lots-catalog.schema';
+import { lotResponseSchema } from './lot-response.schema';
 
-export const lotDetailsSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  description: z.string().nullable(),
-  startingPrice: z.string(),
-  currentPrice: z.string().nullable(),
-  auctionStart: z.iso.datetime().nullable(),
-  auctionEnd: z.iso.datetime().nullable(),
-  status: auctionStatusSchema,
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+export const lotDetailsSchema = lotResponseSchema.extend({
   seller: z.object({ id: z.uuid(), name: z.string() }),
 });
 

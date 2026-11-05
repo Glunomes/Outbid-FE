@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { LotFormField } from '../components/LotFormField';
+import { LotForm } from '../components/LotForm';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
 import {
   updateLotSchema,
@@ -11,17 +11,7 @@ import {
 } from '../schemas/lots/update-lot.schema';
 import { getAccessTokenUserId } from '../services/accessTokenStorage';
 import lotsService from '../services/lotsService';
-
-const formatDateTimeLocal = (date: string | null) => {
-  if (!date) {
-    return '';
-  }
-
-  const value = new Date(date);
-  const pad = (part: number) => String(part).padStart(2, '0');
-  const milliseconds = String(value.getMilliseconds()).padStart(3, '0');
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}.${milliseconds}`;
-};
+import { toLocalDateTimeInput } from '../utils/dates/dateTime';
 
 const EditLotPage = () => {
   const { id } = useParams();
@@ -68,8 +58,8 @@ const EditLotPage = () => {
             name: result.name,
             description: result.description ?? '',
             startingPrice: result.startingPrice,
-            auctionStart: formatDateTimeLocal(result.auctionStart),
-            auctionEnd: formatDateTimeLocal(result.auctionEnd),
+            auctionStart: toLocalDateTimeInput(result.auctionStart),
+            auctionEnd: toLocalDateTimeInput(result.auctionEnd),
           });
         }
       } catch (loadError) {
@@ -129,52 +119,33 @@ const EditLotPage = () => {
         <p role="status">This lot can no longer be edited.</p>
       )}
       {isOwner && lot && canEdit && (
-        <form onSubmit={handleSubmit(handleUpdateSubmit)} noValidate>
-          <LotFormField
-            id="lot-name"
-            label="Name"
-            registration={register('name')}
-            error={errors.name?.message}
-          />
-          <LotFormField
-            id="lot-description"
-            label="Description"
-            registration={register('description')}
-            error={errors.description?.message}
-            multiline
-          />
-          <LotFormField
-            id="lot-starting-price"
-            label="Starting price"
-            inputMode="decimal"
-            registration={register('startingPrice')}
-            error={errors.startingPrice?.message}
-          />
-          <LotFormField
-            id="lot-auction-start"
-            label="Auction start"
-            type="datetime-local"
-            step="0.001"
-            registration={register('auctionStart')}
-            error={errors.auctionStart?.message}
-            readOnly={scheduled}
-          />
-          <LotFormField
-            id="lot-auction-end"
-            label="Auction end"
-            type="datetime-local"
-            step="0.001"
-            registration={register('auctionEnd')}
-            error={errors.auctionEnd?.message}
-            readOnly={scheduled}
-          />
-          {scheduled && (
-            <p role="status">A scheduled auction's dates cannot be changed.</p>
-          )}
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving changes…' : 'Save changes'}
-          </button>
-        </form>
+        <LotForm
+          register={{
+            name: register('name'),
+            description: register('description'),
+            startingPrice: register('startingPrice'),
+            auctionStart: register('auctionStart'),
+            auctionEnd: register('auctionEnd'),
+          }}
+          errors={{
+            name: errors.name?.message,
+            description: errors.description?.message,
+            startingPrice: errors.startingPrice?.message,
+            auctionStart: errors.auctionStart?.message,
+            auctionEnd: errors.auctionEnd?.message,
+          }}
+          onSubmit={handleSubmit(handleUpdateSubmit)}
+          isSubmitting={isSubmitting}
+          submitLabel="Save changes"
+          submittingLabel="Saving changes…"
+          dateStep="0.001"
+          scheduleReadOnly={scheduled}
+          scheduleMessage={
+            scheduled
+              ? "A scheduled auction's dates cannot be changed."
+              : undefined
+          }
+        />
       )}
     </main>
   );

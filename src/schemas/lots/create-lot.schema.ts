@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { auctionStatusSchema } from './lots-catalog.schema';
-
-const MAX_AUCTION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+import { getAuctionScheduleIssues } from './auction-schedule';
 
 export const lotPriceSchema = z
   .string()
@@ -22,62 +20,17 @@ export const createLotSchema = z
     auctionEnd: auctionDateSchema.optional(),
   })
   .superRefine(({ auctionStart, auctionEnd }, ctx) => {
-    const hasAuctionStart = auctionStart !== undefined;
-    const hasAuctionEnd = auctionEnd !== undefined;
-
-    if (hasAuctionStart !== hasAuctionEnd) {
+    for (const issue of getAuctionScheduleIssues(
+      auctionStart,
+      auctionEnd,
+      'create',
+    )) {
       ctx.addIssue({
         code: 'custom',
-        path: [hasAuctionStart ? 'auctionEnd' : 'auctionStart'],
-        message: hasAuctionStart
-          ? 'Auction end time is required when start time is set.'
-          : 'Auction start time is required when end time is set.',
-      });
-    }
-
-    if (auctionStart && new Date(auctionStart).getTime() < Date.now()) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionStart'],
-        message: 'Auction start time cannot be in the past.',
-      });
-    }
-
-    if (!auctionStart || !auctionEnd) {
-      return;
-    }
-
-    const auctionDurationMs =
-      new Date(auctionEnd).getTime() - new Date(auctionStart).getTime();
-
-    if (auctionDurationMs <= 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionEnd'],
-        message: 'Auction end time must be after the start time.',
-      });
-    } else if (auctionDurationMs > MAX_AUCTION_DURATION_MS) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionEnd'],
-        message: 'Auction duration cannot exceed 7 days.',
+        path: [issue.path],
+        message: issue.message,
       });
     }
   });
 
 export type CreateLotInput = z.infer<typeof createLotSchema>;
-
-export const createLotResponseSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  description: z.string().nullable(),
-  startingPrice: z.string(),
-  currentPrice: z.string().nullable(),
-  auctionStart: z.iso.datetime().nullable(),
-  auctionEnd: z.iso.datetime().nullable(),
-  status: auctionStatusSchema,
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
-
-export type CreateLotResponse = z.infer<typeof createLotResponseSchema>;

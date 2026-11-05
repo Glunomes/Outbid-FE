@@ -1,13 +1,11 @@
 import { Link } from 'react-router-dom';
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
 import type { LotCatalogItem } from '../schemas/lots/lots-catalog.schema';
+import { formatDateTime } from '../utils/dates/dateTime';
 
 type LotCardProps =
   | { lot: LotCatalogItem; variant?: 'catalog' }
   | { lot: LotDetails; variant: 'details' };
-
-const formatDate = (date: string | null) =>
-  date ? new Date(date).toLocaleString() : 'Not scheduled';
 
 export const LotCard = (props: LotCardProps) => {
   const isDetails = props.variant === 'details';
@@ -27,13 +25,13 @@ export const LotCard = (props: LotCardProps) => {
       <p>
         Starts:{' '}
         <time dateTime={lot.auctionStart ?? undefined}>
-          {formatDate(lot.auctionStart)}
+          {formatDateTime(lot.auctionStart)}
         </time>
       </p>
       <p>
         Ends:{' '}
         <time dateTime={lot.auctionEnd ?? undefined}>
-          {formatDate(lot.auctionEnd)}
+          {formatDateTime(lot.auctionEnd)}
         </time>
       </p>
       {isDetails && <p>Seller: {props.lot.seller.name}</p>}

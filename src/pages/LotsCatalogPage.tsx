@@ -1,79 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LotCard } from '../components/LotCard';
 import { LotsCatalogFilters } from '../components/LotsCatalogFilters';
 import { LotsPagination } from '../components/LotsPagination';
 import lotsService from '../services/lotsService';
+import { PAGE_SIZE, usePaginatedList } from '../hooks/usePaginatedList';
 import type {
   AuctionStatus,
   LotCatalogItem,
   LotsCatalogQueryInput,
 } from '../schemas/lots/lots-catalog.schema';
 
-const PAGE_SIZE = 10;
-
 export const LotsCatalogPage = () => {
-  const [lots, setLots] = useState<LotCatalogItem[]>([]);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<AuctionStatus | ''>('');
   const [auctionStartFrom, setAuctionStartFrom] = useState('');
   const [auctionStartTo, setAuctionStartTo] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (
-      auctionStartFrom &&
-      auctionStartTo &&
-      auctionStartFrom > auctionStartTo
-    ) {
-      return;
-    }
-
-    let isMounted = true;
-
-    const fetchLots = async () => {
-      const params: LotsCatalogQueryInput = {
-        page,
-        limit: PAGE_SIZE,
-        name: search.trim() || undefined,
-        status: status || undefined,
-        auctionStartFrom: auctionStartFrom
-          ? new Date(`${auctionStartFrom}T00:00:00`).toISOString()
-          : undefined,
-        auctionStartTo: auctionStartTo
-          ? new Date(`${auctionStartTo}T23:59:59.999`).toISOString()
-          : undefined,
-      };
-
-      try {
-        setIsLoading(true);
-        setError('');
-        const result = await lotsService.getLots(params);
-        if (isMounted) {
-          setLots(result.lots);
-          setTotalPages(result.totalPages);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setError(
-            error instanceof Error ? error.message : 'Failed to fetch lots',
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchLots();
-    return () => {
-      isMounted = false;
-    };
-  }, [page, search, status, auctionStartFrom, auctionStartTo]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -99,6 +42,33 @@ export const LotsCatalogPage = () => {
     auctionStartFrom && auctionStartTo && auctionStartFrom > auctionStartTo
       ? 'Start date must not be after end date.'
       : '';
+  const loadPage = useCallback(
+    async (requestedPage: number, signal: AbortSignal) => {
+      const params: LotsCatalogQueryInput = {
+        page: requestedPage,
+        limit: PAGE_SIZE,
+        name: search.trim() || undefined,
+        status: status || undefined,
+        auctionStartFrom: auctionStartFrom
+          ? new Date(`${auctionStartFrom}T00:00:00`).toISOString()
+          : undefined,
+        auctionStartTo: auctionStartTo
+          ? new Date(`${auctionStartTo}T23:59:59.999`).toISOString()
+          : undefined,
+      };
+
+      const result = await lotsService.getLots(params, signal);
+      return { lots: result.lots, totalPages: result.totalPages };
+    },
+    [search, status, auctionStartFrom, auctionStartTo],
+  );
+  const { lots, totalPages, error, isLoading } =
+    usePaginatedList<LotCatalogItem>({
+      page,
+      loadPage,
+      enabled: !dateRangeError,
+      errorFallback: 'Failed to fetch lots',
+    });
 
   return (
     <section>

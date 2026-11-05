@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import registrationService from '../services/authService';
-import { AuthFormField } from '../components/AuthFormField';
+import { FormField } from '../components/FormField';
 import {
   registerRequestSchema,
   type RegisterRequest,
@@ -38,14 +38,14 @@ export const RegistrationPage = () => {
     <div>
       {error && <p role="alert">{error}</p>}
       <form onSubmit={handleSubmit(handleRegistrationSubmit)} noValidate>
-        <AuthFormField
+        <FormField
           id="register-name"
           label="Name"
           type="text"
           registration={register('name')}
           error={errors.name?.message}
         />
-        <AuthFormField
+        <FormField
           id="register-email"
           label="Email"
           type="email"
@@ -53,7 +53,7 @@ export const RegistrationPage = () => {
           registration={register('email')}
           error={errors.email?.message}
         />
-        <AuthFormField
+        <FormField
           id="register-password"
           label="Password"
           type="password"

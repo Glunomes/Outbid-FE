@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import {
-  createLotResponseSchema,
-  type CreateLotResponse,
-} from './create-lot.schema';
+import { lotResponseSchema, type LotResponse } from './lot-response.schema';
 
 export const myLotsQuerySchema = z
   .object({
@@ -14,12 +11,12 @@ export const myLotsQuerySchema = z
 export type MyLotsQueryInput = z.input<typeof myLotsQuerySchema>;
 
 export const myLotsResponseSchema = z.object({
-  lots: z.array(createLotResponseSchema),
+  lots: z.array(lotResponseSchema),
   page: z.number().int().positive(),
   limit: z.number().int().min(1).max(100),
   total: z.number().int().nonnegative(),
   totalPages: z.number().int().nonnegative(),
 });
 
-export type MyLot = CreateLotResponse;
+export type MyLot = LotResponse;
 export type MyLotsResponse = z.infer<typeof myLotsResponseSchema>;

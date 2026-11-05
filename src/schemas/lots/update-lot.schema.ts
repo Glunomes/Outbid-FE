@@ -1,9 +1,7 @@
 import { z } from 'zod';
-import {
-  createLotResponseSchema,
-  lotPriceSchema,
-  type CreateLotResponse,
-} from './create-lot.schema';
+import { lotPriceSchema } from './create-lot.schema';
+import { getAuctionScheduleIssues } from './auction-schedule';
+import { lotResponseSchema, type LotResponse } from './lot-response.schema';
 
 const localDateTimeSchema = z
   .string()
@@ -29,41 +27,15 @@ export const updateLotSchema = z
     auctionEnd: localDateTimeSchema,
   })
   .superRefine(({ auctionStart, auctionEnd }, ctx) => {
-    if ((auctionStart === null) !== (auctionEnd === null)) {
+    for (const issue of getAuctionScheduleIssues(
+      auctionStart,
+      auctionEnd,
+      'update',
+    )) {
       ctx.addIssue({
         code: 'custom',
-        path: [auctionStart === null ? 'auctionEnd' : 'auctionStart'],
-        message:
-          'Auction start and end times must both be set or both be empty.',
-      });
-      return;
-    }
-
-    if (auctionStart && new Date(auctionStart).getTime() < Date.now()) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionStart'],
-        message: 'Auction start time cannot be in the past.',
-      });
-    }
-
-    if (!auctionStart || !auctionEnd) {
-      return;
-    }
-
-    const durationMs =
-      new Date(auctionEnd).getTime() - new Date(auctionStart).getTime();
-    if (durationMs <= 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionEnd'],
-        message: 'Auction end time must be after the start time.',
-      });
-    } else if (durationMs > 7 * 24 * 60 * 60 * 1000) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['auctionEnd'],
-        message: 'Auction duration cannot exceed 7 days.',
+        path: [issue.path],
+        message: issue.message,
       });
     }
   });
@@ -71,6 +43,6 @@ export const updateLotSchema = z
 export type UpdateLotInput = z.input<typeof updateLotSchema>;
 export type UpdateLotRequest = z.output<typeof updateLotSchema>;
 
-export const updateLotResponseSchema = createLotResponseSchema;
+export const updateLotResponseSchema = lotResponseSchema;
 
-export type UpdateLotResponse = CreateLotResponse;
+export type UpdateLotResponse = LotResponse;

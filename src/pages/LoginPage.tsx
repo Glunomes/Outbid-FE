@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import registrationService from '../services/authService';
-import { AuthFormField } from '../components/AuthFormField';
+import { FormField } from '../components/FormField';
 import {
   loginRequestSchema,
   type LoginRequest,
@@ -50,7 +50,7 @@ export const LoginPage = () => {
       )}
       {error && <p role="alert">{error}</p>}
       <form onSubmit={handleSubmit(handleLoginSubmit)} noValidate>
-        <AuthFormField
+        <FormField
           id="login-email"
           label="Email"
           type="email"
@@ -58,7 +58,7 @@ export const LoginPage = () => {
           registration={register('email')}
           error={errors.email?.message}
         />
-        <AuthFormField
+        <FormField
           id="login-password"
           label="Password"
           type="password"

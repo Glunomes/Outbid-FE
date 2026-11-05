@@ -8,11 +8,11 @@ import {
   lotDetailsSchema,
   type LotDetails,
 } from '../schemas/lots/lot-details.schema';
+import { type CreateLotInput } from '../schemas/lots/create-lot.schema';
 import {
-  createLotResponseSchema,
-  type CreateLotInput,
-  type CreateLotResponse,
-} from '../schemas/lots/create-lot.schema';
+  lotResponseSchema,
+  type LotResponse,
+} from '../schemas/lots/lot-response.schema';
 import {
   updateLotResponseSchema,
   type UpdateLotRequest,
@@ -26,8 +26,9 @@ import {
 
 const getLots = async (
   params?: LotsCatalogQueryInput,
+  signal?: AbortSignal,
 ): Promise<LotsCatalogResponse> => {
-  const response = await api.get('/lots', { params });
+  const response = await api.get('/lots', { params, signal });
   return lotsCatalogResponseSchema.parse(response.data);
 };
 
@@ -47,9 +48,9 @@ const getLotById = async (
   return lotDetailsSchema.parse(response.data);
 };
 
-const createLot = async (data: CreateLotInput): Promise<CreateLotResponse> => {
+const createLot = async (data: CreateLotInput): Promise<LotResponse> => {
   const response = await api.post('/lots', data);
-  return createLotResponseSchema.parse(response.data);
+  return lotResponseSchema.parse(response.data);
 };
 
 const updateLot = async (

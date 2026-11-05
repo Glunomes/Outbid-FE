@@ -10,9 +10,7 @@ const localDateTimeSchema = z
   .refine(
     (value) =>
       value === '' ||
-      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(
-        value,
-      ) &&
+      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(value) &&
         !Number.isNaN(new Date(value).getTime())),
     'Enter a valid date and time',
   )
@@ -35,7 +33,8 @@ export const updateLotSchema = z
       ctx.addIssue({
         code: 'custom',
         path: [auctionStart === null ? 'auctionEnd' : 'auctionStart'],
-        message: 'Auction start and end times must both be set or both be empty.',
+        message:
+          'Auction start and end times must both be set or both be empty.',
       });
       return;
     }

@@ -1,15 +1,23 @@
 import { z } from 'zod';
+import { notifyAuthStateChanged } from './authEvents';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const accessTokenPayloadSchema = z.object({ sub: z.uuid() });
 
 export const getAccessToken = () => sessionStorage.getItem(ACCESS_TOKEN_KEY);
 
-export const saveAccessToken = (accessToken: string) =>
+export const saveAccessToken = (accessToken: string) => {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  notifyAuthStateChanged();
+};
 
-export const clearAccessToken = () =>
+export const clearAccessToken = () => {
+  const hadAccessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY) !== null;
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  if (hadAccessToken) {
+    notifyAuthStateChanged();
+  }
+};
 
 export const getAccessTokenUserId = (): string | null => {
   const token = getAccessToken();

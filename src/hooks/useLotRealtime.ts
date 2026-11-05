@@ -8,6 +8,7 @@ import {
 import type { LotDetails } from '../schemas/lots/lot-details.schema';
 import type { LotRealtimeState } from '../types/auctions/lot-realtime.types';
 import { useLotStatusCheck } from './useLotStatusCheck';
+import { notifyWalletUpdated } from '../services/authEvents';
 
 const initialState = (lotId: string): LotRealtimeState => ({
   lotId,
@@ -90,6 +91,7 @@ export const useLotRealtime = (
         return;
       }
 
+      notifyWalletUpdated();
       updateState((current) => {
         if (!current.lot || current.seenBidIds.includes(bid.bidId)) {
           return current;

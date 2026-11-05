@@ -8,6 +8,7 @@ import {
   type MakeBidRequest,
   type MakeBidResponse,
 } from '../schemas/bids/make-bid.schema';
+import { notifyWalletUpdated } from './authEvents';
 
 const getBidHistory = async (
   lotId: string,
@@ -22,7 +23,9 @@ const makeBid = async (
   data: MakeBidRequest,
 ): Promise<MakeBidResponse> => {
   const response = await api.post(`/lots/${lotId}/bids`, data);
-  return makeBidResponseSchema.parse(response.data);
+  const result = makeBidResponseSchema.parse(response.data);
+  notifyWalletUpdated();
+  return result;
 };
 
 export default {

@@ -109,9 +109,7 @@ export const MyLotsPage = () => {
           totalPages={result.totalPages}
           onPrevious={() => setPage((current) => Math.max(current - 1, 1))}
           onNext={() =>
-            setPage((current) =>
-              Math.min(current + 1, result.totalPages),
-            )
+            setPage((current) => Math.min(current + 1, result.totalPages))
           }
         />
       )}

@@ -169,9 +169,7 @@ const EditLotPage = () => {
             readOnly={scheduled}
           />
           {scheduled && (
-            <p role="status">
-              A scheduled auction's dates cannot be changed.
-            </p>
+            <p role="status">A scheduled auction's dates cannot be changed.</p>
           )}
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving changes…' : 'Save changes'}

@@ -7,11 +7,13 @@ import { LotPage } from './pages/LotPage';
 import EditLotPage from './pages/EditLotPage';
 import { MyLotsPage } from './pages/MyLotsPage';
 import { CreateLotPage } from './pages/CreateLotPage';
+import { WalletBalance } from './components/WalletBalance';
 
 function App() {
   return (
     <div>
       <h1>Outbid</h1>
+      <WalletBalance />
       <SessionExpiryHandler />
       <Routes>
         <Route path="/auth/register" element={<RegistrationPage />} />

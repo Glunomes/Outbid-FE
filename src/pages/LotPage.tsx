@@ -28,9 +28,7 @@ export const LotPage = () => {
   const displayedBids = realtime.hasSnapshot
     ? realtime.bids
     : (pageData.bidHistory?.result?.bids ?? []);
-  const isOwner = Boolean(
-    lot && getAccessTokenUserId() === lot.seller.id,
-  );
+  const isOwner = Boolean(lot && getAccessTokenUserId() === lot.seller.id);
   const hasBids = displayedBids.length > 0;
   const canCancel =
     Boolean(lot) &&
@@ -80,9 +78,7 @@ export const LotPage = () => {
           >
             {isCancelling ? 'Cancelling…' : 'Cancel lot'}
           </button>
-          {hasBids && (
-            <p role="status">A lot with bids cannot be cancelled.</p>
-          )}
+          {hasBids && <p role="status">A lot with bids cannot be cancelled.</p>}
           {ownerActionError && <p role="alert">{ownerActionError}</p>}
         </section>
       )}

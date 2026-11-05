@@ -18,12 +18,25 @@ import {
   type UpdateLotRequest,
   type UpdateLotResponse,
 } from '../schemas/lots/update-lot.schema';
+import {
+  myLotsResponseSchema,
+  type MyLotsQueryInput,
+  type MyLotsResponse,
+} from '../schemas/lots/my-lots.schema';
 
 const getLots = async (
   params?: LotsCatalogQueryInput,
 ): Promise<LotsCatalogResponse> => {
   const response = await api.get('/lots', { params });
   return lotsCatalogResponseSchema.parse(response.data);
+};
+
+const getMyLots = async (
+  params?: MyLotsQueryInput,
+  signal?: AbortSignal,
+): Promise<MyLotsResponse> => {
+  const response = await api.get('/lots/mine', { params, signal });
+  return myLotsResponseSchema.parse(response.data);
 };
 
 const getLotById = async (
@@ -53,6 +66,7 @@ const cancelLot = async (id: string): Promise<void> => {
 
 export default {
   getLots,
+  getMyLots,
   getLotById,
   createLot,
   updateLot,

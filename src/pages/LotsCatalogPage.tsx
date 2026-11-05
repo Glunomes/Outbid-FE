@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { LotCard } from '../components/LotCard';
 import { LotsCatalogFilters } from '../components/LotsCatalogFilters';
 import { LotsPagination } from '../components/LotsPagination';
@@ -102,6 +103,11 @@ export const LotsCatalogPage = () => {
   return (
     <section>
       <h2>Lots</h2>
+      <p>
+        <Link to="/my-lots">My lots</Link>
+        {' · '}
+        <Link to="/lots/new">Create a lot</Link>
+      </p>
 
       <LotsCatalogFilters
         search={search}
